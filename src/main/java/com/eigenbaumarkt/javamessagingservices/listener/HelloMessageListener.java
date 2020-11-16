@@ -10,7 +10,6 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import java.util.UUID;
@@ -37,14 +36,21 @@ public class HelloMessageListener {
     }
 
     @JmsListener(destination = JmsConfig.MY_SAR_QUEUE)
-    public void listenForHello(@Payload HelloWorldMessage helloWorldMessage, @Headers MessageHeaders headers, Message message) throws JMSException {
+    public void listenForHello(@Payload HelloWorldMessage helloWorldMessage,
+                               @Headers MessageHeaders headers,
+                               Message jmsMessage,
+                               org.springframework.messaging.Message springMessage) throws JMSException {
 
         HelloWorldMessage payloadMsg = HelloWorldMessage
                 .builder()
                 .id(UUID.randomUUID())
                 .message("World!")
                 .build();
-        jmsTemplate.convertAndSend(message.getJMSReplyTo(), payloadMsg);
+        // with the 'javax.jms.Message' Implementation:
+        jmsTemplate.convertAndSend(jmsMessage.getJMSReplyTo(), payloadMsg);
+
+        // with the Spring framework 'Message' implementation, including cast to JMS 'Destination':
+        // jmsTemplate.convertAndSend((Destination) springMessage.getHeaders().get("jms_replyTo", "got it!");
 
 
 
